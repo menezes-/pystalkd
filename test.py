@@ -1,7 +1,5 @@
 __author__ = 'Gabriel'
 
-
-
 from pystalkd import Beanstalkd
 import json
 import unittest
@@ -111,7 +109,7 @@ class TestBeanstalkd(unittest.TestCase):
     def steps(self):
         for name in sorted(dir(self)):
             if name.startswith("step"):
-                    yield name, getattr(self, name)
+                yield name, getattr(self, name)
 
     def test_steps(self):
         for name, step in self.steps():
@@ -136,8 +134,20 @@ class TestBeanstalkd(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    import sys
+
+    try:
+        host_arg = sys.argv[1]
+    except IndexError:
+        host_arg = Beanstalkd.DEFAULT_HOST
+
+    try:
+        port_arg = sys.argv[2]
+    except IndexError:
+        port_arg = Beanstalkd.DEFAULT_PORT
+
     suite = unittest.TestSuite()
-    suite.addTest(TestBeanstalkd("test_wrong_connection", "192.168.200.202"))
-    suite.addTest(TestBeanstalkd("test_no_yaml", "192.168.200.202"))
-    suite.addTest(TestBeanstalkd("test_steps", "192.168.200.202"))
+    suite.addTest(TestBeanstalkd("test_wrong_connection", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_no_yaml", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_steps", host_arg, port_arg))
     unittest.TextTestRunner().run(suite)
