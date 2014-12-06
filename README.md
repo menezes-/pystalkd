@@ -38,8 +38,9 @@ python3 test.py
 License
 -------
 
-Copyright (C) 2008-2014 Andreas Bolka
-Copyright (C) 2014 Gabriel Menezes
+Copyright (C) 2008-2014 Andreas Bolka.
+
+Copyright (C) 2014 Gabriel Menezes.
 Licensed under the [Apache License,Version 2.0][license].
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
