@@ -2,12 +2,32 @@ pystalkd
 ========
 
 Beanstalkd bindings for python3.
-This library is based on https://github.com/earl/beanstalkc and should be API compatible,
-threfore this tutorial is valid: https://github.com/earl/beanstalkc/blob/master/TUTORIAL.mkd.
+This library is based on https://github.com/earl/beanstalkc and should be API compatible.
 
-The main difference, API wise, is that pystalkd accepts timedelta objects where number of seconds is expected
+Installing
+-------
+```
+pip install pystalkd
+```
+or from source:
+```
+python setup.py install
+```
 
-The source code is commented with param and returns types.
+Using
+------
+```python
+>>> from pystalkd.Beanstalkd import Connection
+>>> c = Connection("localhost", 11300) #if no argument is given default configuration is used
+>>> c.put("hey!")
+>>> job = c.reserve(0)
+>>> job.body
+```
+One of the goals is to be API compatible with beanstalkc, so this tutorial should be valid: https://github.com/earl/beanstalkc/blob/master/TUTORIAL.mkd
+
+The main difference, API wise, is that where number of seconds is expected pystalkd also accepts a timedelta object
+
+
 
 Tests
 -------
