@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 import socket
 from datetime import timedelta
@@ -50,6 +50,19 @@ class SocketError(BeanstalkdException):
             return wrapped_function(*args, **kwargs)
         except socket.error as err:
             raise SocketError(err)
+
+
+def total_seconds(td):
+    """
+    simulates the total_seconds function added in python 3.2+ and 2.7+
+    See
+    :param td: timedelta
+    :type td: timedelta
+    :return: int representing total seconds from timedelta
+    :rtype: int
+    """
+    #microseconds is not used, since i have to convert it to int to use in beanstalkd
+    return int(((td.seconds + td.days * 24 * 3600) * 10 ** 6) / 10 ** 6)
 
 
 class Connection(object):
@@ -184,9 +197,9 @@ class Connection(object):
         """
         assert isinstance(body, str), 'Job body must be a str instance'
         if isinstance(ttr, timedelta):
-            ttr = ttr.seconds
+            ttr = total_seconds(ttr)
         if isinstance(delay, timedelta):
-            delay = delay.seconds
+            delay = total_seconds(delay)
         ok_status = ['INSERTED']
         error_status = ['JOB_TOO_BIG', 'BURIED', 'DRAINING', 'EXPECTED_CRLF']
         status, job = self.send_command("put", priority, delay, ttr, str(len(body)) + "\r\n" + body,
@@ -212,7 +225,7 @@ class Connection(object):
         :rtype: Job
         """
         if isinstance(timeout, timedelta):
-            timeout = timeout.seconds
+            timeout = total_seconds(timeout)
 
         if timeout is None:
             command = "reserve"
@@ -431,7 +444,7 @@ class Connection(object):
         """
 
         if isinstance(delay, timedelta):
-            delay = delay.seconds
+            delay = total_seconds(delay)
 
         self.send_command("pause-tube", name, delay, ok_status=["PAUSED"], error_status=["NOT_FOUND"])
 
@@ -448,7 +461,7 @@ class Connection(object):
 
         """
         if isinstance(delay, timedelta):
-            delay = delay.seconds
+            delay = total_seconds(delay)
         # BURIED is considered an error because, acording to the protocol, "BURIED\r\n if the server ran out of memory trying to grow the priority queue data structure."
         self.send_command("release", job_id, priority, delay, ok_status=["RELEASED"],
                           error_status=["BURIED", "NOT_FOUND"])

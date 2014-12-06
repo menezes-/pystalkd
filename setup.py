@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='pystalkd',
-    version='1.0',
+    version='1.0.1',
     packages=['pystalkd'],
     url='https://github.com/menezes-/pystalkd',
     download_url='https://github.com/menezes-/pystalkd/archive/master.zip',
