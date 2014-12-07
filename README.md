@@ -25,7 +25,22 @@ Using
 ```
 One of the goals is to be API compatible with beanstalkc, so this tutorial should be valid: https://github.com/earl/beanstalkc/blob/master/TUTORIAL.mkd
 
-The main difference, API wise, is that where number of seconds is expected pystalkd also accepts a timedelta object
+The main differences, API wise are: 
+
+1) where number of seconds is expected pystalkd also accepts a timedelta object
+
+2) you can temporarily watch and use a tube
+  ```python
+  print(c.using()) # "default"
+  with c.temporary_use("test"):
+      print(c.using()) # "test"
+  print(c.using()) # "default"
+  
+  print(c.watching()) # ["default"]
+  with c.temporary_use("test"):
+      print(c.watching()) # ["default", "test"]
+  print(c.watching()) # ["default"]
+  ```
 
 
 
