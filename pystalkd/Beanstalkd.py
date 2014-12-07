@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 """pystalkd - A beanstalkd Client Library for Python3 - Based on https://github.com/earl/beanstalkc"""
+from contextlib import contextmanager
 
 __license__ = '''
 Copyright (C) 2008-2014 Andreas Bolka
@@ -365,6 +366,18 @@ class Connection(object):
         _, body = self.send_command("use", name, ok_status=["USING"])
         return str(body, "utf8")
 
+    @contextmanager
+    def temporary_use(self, name):
+        """
+        Use a `name` tube temporarily and then go back to the previous one
+        :param name: name of the tube
+        :type name: str
+        """
+        old = self.using()
+        self.use(name)
+        yield
+        self.use(old)
+
     def _check_name_size(self, name):
         temp_b = bytes(name, "utf8")
         if len(temp_b) > 200:
@@ -382,6 +395,17 @@ class Connection(object):
 
         _, body = self.send_command("watch", name, ok_status=["WATCHING"])
         return int(body)
+
+    @contextmanager
+    def temporary_watch(self, name):
+        """
+        Watch a given tube and then ignores it. To be used in with statements.
+        :param name: name of tube
+        :type name: str
+        """
+        self.watch(name)
+        yield
+        self.ignore(name)
 
     def watching(self):
         """Return a list of all tubes being watched.

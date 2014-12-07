@@ -95,6 +95,23 @@ class TestBeanstalkd(unittest.TestCase):
         with self.assertRaises(Beanstalkd.SocketError):
             Beanstalkd.Connection("255.255.255.255")
 
+    def test_temporary_use(self):
+        conn = Beanstalkd.Connection(self.host, self.port)
+        with conn.temporary_use(self.tube_name):
+            self.assertEqual(conn.using(), self.tube_name, "should be using {}".format(self.tube_name))
+        self.assertEqual(conn.using(), "default", "should be using 'default'")
+        conn.close()
+
+    def test_temporary_watch(self):
+        conn = Beanstalkd.Connection(self.host, self.port)
+        if conn.parse_yaml:
+            with conn.temporary_watch(self.tube_name):
+                self.assertListEqual(conn.watching(), ["default", self.tube_name], "not watching {}".format(self.tube_name))
+            self.assertListEqual(conn.watching(), ["default"], "should only be watchin 'default'")
+        else:
+            self.skipTest("needs PyYaml")
+        conn.close()
+
     def test_no_yaml(self):
         conn = Beanstalkd.Connection(self.host, self.port, parse_yaml=False)
         conn.use(self.tube_name)
@@ -103,6 +120,7 @@ class TestBeanstalkd(unittest.TestCase):
         self.assertIsInstance(conn.stats_tube(self.tube_name), str)
         self.assertIsInstance(conn.tubes(), str)
         self.assertIsInstance(conn.watching(), str)
+        conn.close()
 
     # http://stackoverflow.com/a/5387956/482238
 
@@ -150,4 +168,6 @@ if __name__ == '__main__':
     suite.addTest(TestBeanstalkd("test_wrong_connection", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_no_yaml", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_steps", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_temporary_use", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_temporary_watch", host_arg, port_arg))
     unittest.TextTestRunner().run(suite)
