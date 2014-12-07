@@ -31,8 +31,13 @@ The main difference, API wise, is that where number of seconds is expected pysta
 
 Tests
 -------
+To test with default host and port (localhost, 11300): 
 ```
 python3 test.py
+```
+To test on a specific host (if port is not specified 11300 is used)
+```
+python3 test.py host [port]
 ```
 
 License
