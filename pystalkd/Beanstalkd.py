@@ -386,7 +386,7 @@ class Connection(object):
 
     def _check_name_size(self, name):
         """
-        > foralidation to prevent big names on some commands
+        for validation. To prevent big names on some commands
         :param name: name to be validated
         :type name: str
         """
