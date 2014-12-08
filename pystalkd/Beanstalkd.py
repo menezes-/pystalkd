@@ -16,7 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-__version__ = '1.0.1'
+__version__ = '1.1'
 
 import socket
 from datetime import timedelta
@@ -129,7 +129,7 @@ class Connection(object):
 
         return mem_view.tobytes()
 
-    def send(self, command: str, *args: [str, ]):
+    def send(self, command, *args):
         """
         Low-level send command. It sends the `command` string with the arguments present in `args`
         :param command: beanstalkd command i.e "put"
@@ -183,7 +183,7 @@ class Connection(object):
     def put(self, body, priority=DEFAULT_PRIORITY, delay=0, ttr=DEFAULT_TTR):
         """
         Put a job into the current tube. Returns job id.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#put-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#put-command for full info.
         :param body: body of job
         :type body: str
         :param priority: priority of the job. Defaults to 2**31
@@ -220,7 +220,7 @@ class Connection(object):
         """
         Reserve a job from one of the watched tubes, with optional timeout
         in seconds. Returns a Job object, or None if the request times out.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#reserve-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#reserve-command for full info.
         :type timeout: int | timedelta
         :return: will return a newly-reserved job
         :rtype: Job
@@ -246,7 +246,7 @@ class Connection(object):
     def kick(self, bound=1):
         """Kick at most bound jobs into the ready queue.
         If there are any buried jobs, it will only kick buried jobs.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#kick-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#kick-command for full info.
         Otherwise it will kick delayed jobs
         :return: count of kicked jobs
         :rtype: int
@@ -254,10 +254,10 @@ class Connection(object):
         _, body = self.send_command("kick", bound, ok_status=["KICKED", ])
         return int(body)
 
-    def kick_job(self, job_id: int):
+    def kick_job(self, job_id):
         """If the given `job_id` exists and is in a buried or
         delayed state, it will be moved to the ready queue of the the same tube where it currently belongs
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#kick-job-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#kick-job-command for full info.
         :param job_id: id of job
         :type job_id: int
         :return: job_id
@@ -266,19 +266,19 @@ class Connection(object):
         _, body = self.send_command("kick-job", job_id, ok_status=["KICKED"],
                                     error_status=["NOT_FOUND"])
 
-    def delete(self, job_id: int):
+    def delete(self, job_id):
         """
         Delete a job, by job id.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#delete-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#delete-command for full info.
         :param job_id: id of job
         :type job_id: int
         """
 
         self.send_command("delete", job_id, ok_status=["DELETED", ], error_status=["NOT_FOUND", ])
 
-    def peek(self, job_id: int):
+    def peek(self, job_id):
         """Peek at job `job_id`
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#other-commands> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#other-commands for full info.
         :param job_id: id of job
         :type job_id: int
         :return: Job if found else None
@@ -292,7 +292,13 @@ class Connection(object):
 
         return self.parse_job(body)
 
-    def _peek_state(self, state: str):
+    def _peek_state(self, state):
+        """
+        Generate and execute peek-* commands
+        :param state: state to peek
+        :type state: str
+        :return:
+        """
         command = "peek" + "-" + state
         status, body = self.send_command(command, ok_status=["NOT_FOUND", "FOUND"])
         if status == "NOT_FOUND":
@@ -302,7 +308,7 @@ class Connection(object):
 
     def peek_ready(self):
         """Peek at next ready job. Returns a Job, or None.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#peek-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#peek-command for full info.
         :return: Job if found else None
         :rtype: Job | None
         """
@@ -310,7 +316,7 @@ class Connection(object):
 
     def peek_delayed(self):
         """Peek at next delayed job. Returns a Job, or None.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#peek-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#peek-command for full info.
         :return: Job if found else None
         :rtype: Job | None
         """
@@ -318,7 +324,7 @@ class Connection(object):
 
     def peek_buried(self):
         """Peek at next buried job. Returns a Job, or None.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#peek-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#peek-command for full info.
         :return: Job if found else None
         :rtype: Job | None
         """
@@ -357,7 +363,7 @@ class Connection(object):
 
     def use(self, name):
         """Use a `name` tube.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#use-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#use-command for full info.
         :param name: name of the tube
         :type name: str
         :return: current tube
@@ -379,13 +385,18 @@ class Connection(object):
         self.use(old)
 
     def _check_name_size(self, name):
+        """
+        > foralidation to prevent big names on some commands
+        :param name: name to be validated
+        :type name: str
+        """
         temp_b = bytes(name, "utf8")
         if len(temp_b) > 200:
             raise ValueError("name must be at most 200 bytes")
 
     def watch(self, name):
         """Watch a given tube.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#watch-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#watch-command for full info.
         :return: number of tubes currently in the watch list.
         :rtype: int
         :param name: name of the tube
@@ -409,7 +420,7 @@ class Connection(object):
 
     def watching(self):
         """Return a list of all tubes being watched.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#list-tubes-watched-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#list-tubes-watched-command for full info.
         if `parse_yaml` is True and pyyaml extension is installed it will parse the yaml an return a list else it will
         return the yaml string
         :return: all tubes being watched
@@ -420,7 +431,7 @@ class Connection(object):
 
     def ignore(self, name):
         """Stop watching a given tube.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#ignore-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#ignore-command for full info.
         :param name: name of tube
         :type name: str
         :return: number of tubes currently in the watch list.
@@ -434,7 +445,7 @@ class Connection(object):
 
     def stats(self):
         """Return a dict of beanstalkd statistics.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#stats-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#stats-command for full info.
         if `parse_yaml` is True and PyYaml extension is installed it will parse the yaml an return a dict else it will
         return the yaml string
         :return:  beanstalkd statistics
@@ -445,7 +456,7 @@ class Connection(object):
 
     def stats_tube(self, name):
         """Return a dict of stats about a given tube.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#stats-tube-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#stats-tube-command for full info.
          if `parse_yaml` is True and PyYaml extension is installed it will parse the yaml an return a dict else it will
         return the yaml string
         :param name: tube
@@ -460,7 +471,7 @@ class Connection(object):
 
     def pause_tube(self, name, delay):
         """Pause a tube for a given delay time, in seconds.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#pause-tube-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#pause-tube-command for full info.
         :param name: tube name
         :param delay: seconds to delay tube
         :type name: str
@@ -474,7 +485,7 @@ class Connection(object):
 
     def release(self, job_id, priority=DEFAULT_PRIORITY, delay=0):
         """Release a reserved job back into the ready queue.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#release-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#release-command for full info.
         :param job_id: job id
         :param priority: new priority to assign to the job.
         :param delay: number of seconds to wait before putting the job in the ready queue.
@@ -492,7 +503,7 @@ class Connection(object):
 
     def bury(self, job_id, priority=DEFAULT_PRIORITY):
         """Bury a job, by job id.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#bury-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#bury-command for full info.
         :param job_id: job id
         :param priority: new priority to assign to the job.
         :type job_id: int
@@ -504,7 +515,7 @@ class Connection(object):
     def touch(self, job_id):
         """Touch a job, by `job_id`, requesting more time to work on a reserved
         job before it expires.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#touch-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#touch-command for full info.
         :param job_id: job id
         :type job_id: int
         """
@@ -512,7 +523,7 @@ class Connection(object):
 
     def stats_job(self, job_id):
         """Return a dict of stats about a job, by job id.
-        See <https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#stats-job-command> for full info.
+        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#stats-job-command for full info.
         if `parse_yaml` is True and PyYaml extension is installed it will parse the yaml an return a dict else it will
         return the yaml string
         :param job_id: job id
