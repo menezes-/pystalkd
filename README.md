@@ -1,7 +1,11 @@
 pystalkd
 ========
+>Beanstalk is a simple, fast work queue.
+>Its interface is generic, but was originally designed for reducing the latency of page views in high-volume web applications by running time-consuming tasks asynchronously
 
-Beanstalkd bindings for python3.
+http://kr.github.io/beanstalkd/
+
+pystalkd is a beanstalkd bindings targeting python3.
 This library is based on https://github.com/earl/beanstalkc and should be API compatible.
 
 Installing
@@ -22,6 +26,7 @@ Using
 >>> c.put("hey!")
 >>> job = c.reserve(0)
 >>> job.body
+"hey!"
 ```
 One of the goals is to be API compatible with beanstalkc, so this tutorial should be valid: https://github.com/earl/beanstalkc/blob/master/TUTORIAL.mkd
 
@@ -29,7 +34,8 @@ The main differences, API wise are:
 
 1) where number of seconds is expected pystalkd also accepts a timedelta object
 
-2) you can temporarily watch and use a tube
+2) you can temporarily watch and use a tube using the `with` keyword
+
   ```python
   print(c.using()) # "default"
   with c.temporary_use("test"):
