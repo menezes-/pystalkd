@@ -138,9 +138,6 @@ class TestBeanstalkd(unittest.TestCase):
         ttr = job.stats()["ttr"]
         self.assertEqual(ttr, 86400, "timedelta was not converted to seconds")
 
-
-
-
     # http://stackoverflow.com/a/5387956/482238
 
     def steps(self):
@@ -156,7 +153,7 @@ class TestBeanstalkd(unittest.TestCase):
                 self.fail("{} failed ({}: {})".format(step, type(e), e))
 
     def tearDown(self):
-        # in case a test fails, clean the queue
+        #clean the queue
         if self.conn.parse_yaml:
             stats = self.conn.stats()
             if stats["current-jobs-buried"] > 0:
