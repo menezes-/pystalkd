@@ -1,8 +1,12 @@
+from datetime import timedelta
+
 __author__ = 'Gabriel'
 
 from pystalkd import Beanstalkd
 import json
 import unittest
+
+#Todo: don't skip tests if PyYaml is not installed
 
 
 class TestBeanstalkd(unittest.TestCase):
@@ -15,7 +19,6 @@ class TestBeanstalkd(unittest.TestCase):
         self.conn = Beanstalkd.Connection(self.host, self.port)
         self.tube_name = "pystalkd.tests"
         self.data = {"a": "b"}
-
 
     def step1(self):
         """
@@ -122,6 +125,22 @@ class TestBeanstalkd(unittest.TestCase):
         self.assertIsInstance(conn.watching(), str)
         conn.close()
 
+    def test_timedelta(self):
+        conn = Beanstalkd.Connection(self.host, self.port)
+        conn.use(self.tube_name)
+        if not conn.parse_yaml:
+            self.skipTest("needs PyYaml")
+            return
+        t = timedelta(days=1)
+        #'ttr': 86400
+        conn.put("hey!", ttr=t)
+        job = conn.reserve()
+        ttr = job.stats()["ttr"]
+        self.assertEqual(ttr, 86400, "timedelta was not converted to seconds")
+
+
+
+
     # http://stackoverflow.com/a/5387956/482238
 
     def steps(self):
@@ -165,9 +184,9 @@ if __name__ == '__main__':
         port_arg = Beanstalkd.DEFAULT_PORT
 
     suite = unittest.TestSuite()
+    suite.addTest(TestBeanstalkd("test_steps", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_wrong_connection", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_no_yaml", host_arg, port_arg))
-    suite.addTest(TestBeanstalkd("test_steps", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_temporary_use", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_temporary_watch", host_arg, port_arg))
     unittest.TextTestRunner().run(suite)
