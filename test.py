@@ -6,7 +6,24 @@ from pystalkd import Beanstalkd
 import json
 import unittest
 
-#Todo: don't skip tests if PyYaml is not installed
+# Todo: don't skip tests if PyYaml is not installed
+
+
+def clean_tube(tube_name, conn):
+    assert (isinstance(conn, Beanstalkd.Connection))
+    conn.watch(tube_name)
+
+    if conn.parse_yaml:
+        stats = conn.stats()
+        buried = stats["current-jobs-buried"]
+        if buried > 0:
+            conn.kick(buried)
+    while True:
+        job = conn.reserve(0)
+        if job:
+            job.delete()
+        else:
+            break
 
 
 class TestBeanstalkd(unittest.TestCase):
@@ -109,7 +126,8 @@ class TestBeanstalkd(unittest.TestCase):
         conn = Beanstalkd.Connection(self.host, self.port)
         if conn.parse_yaml:
             with conn.temporary_watch(self.tube_name):
-                self.assertListEqual(conn.watching(), ["default", self.tube_name], "not watching {}".format(self.tube_name))
+                self.assertListEqual(conn.watching(), ["default", self.tube_name],
+                                     "not watching {}".format(self.tube_name))
             self.assertListEqual(conn.watching(), ["default"], "should only be watchin 'default'")
         else:
             self.skipTest("needs PyYaml")
@@ -154,16 +172,7 @@ class TestBeanstalkd(unittest.TestCase):
 
     def tearDown(self):
         #clean the queue
-        if self.conn.parse_yaml:
-            stats = self.conn.stats()
-            if stats["current-jobs-buried"] > 0:
-                self.conn.kick(stats["current-jobs-buried"])
-        while True:
-            job = self.conn.reserve(0)
-            if job:
-                job.delete()
-            else:
-                break
+        clean_tube(self.tube_name, self.conn)
         self.conn.close()
 
 
