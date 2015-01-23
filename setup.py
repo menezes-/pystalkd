@@ -6,7 +6,7 @@ if os.path.exists('README.rst'):
 
 setup(
     name='pystalkd',
-    version='1.1',
+    version='1.1.1',
     packages=['pystalkd'],
     url='https://github.com/menezes-/pystalkd',
     download_url='https://github.com/menezes-/pystalkd/archive/master.zip',
