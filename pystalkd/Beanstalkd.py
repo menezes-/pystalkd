@@ -207,7 +207,7 @@ class Connection(object):
                                         ok_status=ok_status,
                                         error_status=error_status)
 
-        return int(job[0])
+        return int(job)
 
     def parse_job(self, body):
         job_id, body_rest = body.split(maxsplit=1)
