@@ -203,7 +203,7 @@ class Connection(object):
             delay = total_seconds(delay)
         ok_status = ['INSERTED']
         error_status = ['JOB_TOO_BIG', 'BURIED', 'DRAINING', 'EXPECTED_CRLF']
-        status, job = self.send_command("put", priority, delay, ttr, str(len(body)) + "\r\n" + body,
+        status, job = self.send_command("put", priority, delay, ttr, str(len(body.encode("utf8"))) + "\r\n" + body,
                                         ok_status=ok_status,
                                         error_status=error_status)
 

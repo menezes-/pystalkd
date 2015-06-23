@@ -156,6 +156,18 @@ class TestBeanstalkd(unittest.TestCase):
         ttr = job.stats()["ttr"]
         self.assertEqual(ttr, 86400, "timedelta was not converted to seconds")
 
+    def test_chinese_word(self):
+        """
+        test chinese
+        """
+        job_id = self.conn.put("台灣繁體字 Traditional Chinese characters")
+        self.assertIsInstance(job_id, int, "where's my job id?!")
+
+        job = self.conn.reserve(0)
+
+        self.assertEquals(job.body, "台灣繁體字 Traditional Chinese characters")
+        job.delete()
+
     # http://stackoverflow.com/a/5387956/482238
 
     def steps(self):
@@ -195,4 +207,5 @@ if __name__ == '__main__':
     suite.addTest(TestBeanstalkd("test_no_yaml", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_temporary_use", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_temporary_watch", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_chinese_word", host_arg, port_arg))
     unittest.TextTestRunner().run(suite)
