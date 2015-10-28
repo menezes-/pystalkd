@@ -88,7 +88,7 @@ class Connection(object):
     def connect(self):
         """Connect to beanstalkd server."""
         if not self._socket:
-            socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.settimeout(self._connect_timeout)
         SocketError.wrap(self._socket.connect, (self.host, self.port))
 
