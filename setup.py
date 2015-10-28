@@ -9,14 +9,14 @@ if os.path.exists('README.md'):
 
     process = subprocess.Popen(['pandoc', '--from=markdown', "--to=rst", "README.md"], stdout=subprocess.PIPE)
     out, err = process.communicate()
-    long_description = out
+    long_description = str(out, 'utf8')
 
 setup(
     name='pystalkd',
     version='1.2.0',
     packages=['pystalkd'],
     url='https://github.com/menezes-/pystalkd',
-    download_url='https://github.com/menezes-/pystalkd/archive/master.zip',
+    download_url='https://github.com/menezes-/pystalkd/archive/1.2.zip',
     keywords=['beanstalkd', 'python3', 'bindings'],
     license='Apache-2.0',
     author='Gabriel',
