@@ -168,6 +168,16 @@ class TestBeanstalkd(unittest.TestCase):
         self.assertEquals(job.body, "台灣繁體字 Traditional Chinese characters")
         job.delete()
 
+    def test_bytes(self):
+        """
+        test put bytes and reserve bytes
+        """
+        test_bytes = "台灣繁體字 Traditional Chinese characters".encode("utf8")
+        job_id = self.conn.put_bytes(test_bytes)
+        job = self.conn.reserve_bytes(0)
+        self.assertEquals(job.body, test_bytes)
+        job.delete()
+
     # http://stackoverflow.com/a/5387956/482238
 
     def steps(self):
@@ -208,4 +218,5 @@ if __name__ == '__main__':
     suite.addTest(TestBeanstalkd("test_temporary_use", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_temporary_watch", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_chinese_word", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_bytes", host_arg, port_arg))
     unittest.TextTestRunner().run(suite)
