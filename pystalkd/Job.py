@@ -21,13 +21,14 @@ class Job:
     def __init__(self, connection, job_id, body, size, reserved=True):
         """
         Class representing a Job from beanstalkd
+        `body` can be a bytes instance if it was used with put_bytes
         based on https://github.com/earl/beanstalkc/blob/master/beanstalkc.py#L255
         :param connection: Beanstalkd connection
         :type connection: pystalkd.Beanstalkd.Connection
         :param job_id: Job id return by put
         :type job_id: int
         :param body: Body of job
-        :type body: str
+        :type body: str | bytes
         :param reserved: job is reserved or not
         :type reserved: bool
         :param size: size in bytes of the job body

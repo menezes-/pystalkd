@@ -2,6 +2,9 @@
 
 """pystalkd - A beanstalkd Client Library for Python3 - Based on https://github.com/earl/beanstalkc"""
 from contextlib import contextmanager
+import socket
+from datetime import timedelta
+from .Job import Job
 
 __license__ = '''
 Copyright (C) 2008-2014 Andreas Bolka
@@ -16,11 +19,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-__version__ = '1.1'
-
-import socket
-from datetime import timedelta
-from .Job import Job
+__version__ = '1.2'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 11300
@@ -62,7 +61,7 @@ def total_seconds(td):
     :return: int representing total seconds from timedelta
     :rtype: int
     """
-    #microseconds is not used, since i have to convert it to int to use in beanstalkd
+    # microseconds is not used, since i have to convert it to int to use in beanstalkd
     return int(((td.seconds + td.days * 24 * 3600) * 10 ** 6) / 10 ** 6)
 
 
@@ -133,41 +132,21 @@ class Connection(object):
         """
         Low-level send command. It sends the `command` string with the arguments present in `args`
         :param command: beanstalkd command i.e "put"
-        :param args: arguments to the command
+        :type command: str
         :return: string with beanstalkd return
         :rtype: (str, bytearray)
         """
-        tokens = [command] + [str(x, ) if not isinstance(x, str) else x for x in args]
-        command = bytes(" ".join(tokens), "utf8") + b'\r\n'
-        SocketError.wrap(self._socket.sendall, command)
 
-        response = self._recv()
-        response = response.strip().split(maxsplit=1)
-        if len(response) == 1:
-            status, rest = response[0], response[0]
-        else:
-            status, rest = response
+        args = [bytes(str(s), 'utf8') if not isinstance(s, bytes) else s for s in args]
 
-        status = status.decode("utf8")
-        if status in self.server_errors:
-            raise BeanstalkdException(status)
-        return status, rest
+        # from here args is list of bytes
+        """:type args: list of bytes"""
 
-    def send_bytes(self, command, *args):
-        """
-        Low-level send command. It sends the `command` string with the arguments present in `args`
-        :param command: beanstalkd command i.e "put"
-        :param args: arguments to the command
-        :return: string with beanstalkd return
-        :rtype: (str, bytearray)
-        """
-        args_bytes = [bytes(str(s), 'utf8') if not isinstance(s, bytes) else s for s in args]
-        tokens = [command] + [bytes(x, 'utf8') if not isinstance(x, bytes) else x for x in args_bytes]
+        tokens = [command.encode('utf8')] + args
         command = b" ".join(tokens) + b'\r\n'
         SocketError.wrap(self._socket.sendall, command)
 
         response = self._recv()
-
         response = response.strip().split(maxsplit=1)
         if len(response) == 1:
             status, rest = response[0], response[0]
@@ -181,15 +160,17 @@ class Connection(object):
 
     def send_command(self, command, *args, ok_status=None, error_status=None):
         """
-        Send the `command` to beanstalkd server and validate the response based on `ok_statyus` and `error_status`
+        Send the `command` to beanstalkd server and validate the response based on `ok_status` and `error_status`
         :param command: command to be sent
         :type command: str
-        :param args: arguments to the command
-        :type args: list
+        :param args: arguments to the command. Type depends on the `raw` argument
+        :type args: list of str | list of bytes
         :param ok_status: status that indicate a successful request
         :type ok_status: list of str
         :param error_status: status that indicate an error
         :type error_status: list of str
+        :param raw: If true then `args` is a list bytes instead of list of str
+        :type raw: bool
         :rtype: (str, bytearray)
         """
         status, command_body = self.send(command, *args)
@@ -206,57 +187,42 @@ class Connection(object):
         else:
             raise UnexpectedResponse(status)
 
-    def send_command_bytes(self, command, *args, ok_status=None, error_status=None):
-        """
-        Send the `command` to beanstalkd server and validate the response based on `ok_statyus` and `error_status`
-        :param command: command to be sent
-        :type command: str
-        :param args: arguments to the command
-        :type args: list
-        :param ok_status: status that indicate a successful request
-        :type ok_status: list of str
-        :param error_status: status that indicate an error
-        :type error_status: list of str
-        :rtype: (str, bytearray)
-        """
-        status, command_body = self.send_bytes(command, *args)
-
-        if not ok_status:
-            ok_status = []
-        if not error_status:
-            error_status = []
-
-
-        if status in ok_status:
-            return status, command_body
-        elif status in error_status:
-            raise CommandFailed(status)
-        else:
-            raise UnexpectedResponse(status)
-    def put(self, body, priority=DEFAULT_PRIORITY, delay=0, ttr=DEFAULT_TTR):
+    def put(self, body, priority=DEFAULT_PRIORITY, delay=0, ttr=DEFAULT_TTR, raw=False):
         """
         Put a job into the current tube. Returns job id.
         See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#put-command for full info.
         :param body: body of job
-        :type body: str
+        :type body: str | bytes
         :param priority: priority of the job. Defaults to 2**31
         :type priority: long
         :param delay: number of seconds to wait before putting the job in the ready queue
         :type delay: int | timedelta
         :param ttr:  number of seconds to allow a worker to run this job
         :type ttr: int | timedelta
+        :param raw: If true then send body as bytes and not str
+        :type raw: bool
         :return: job id
         :rtype: int
 
         """
-        assert isinstance(body, str), 'Job body must be a str instance'
+        if raw:
+            assert isinstance(body, bytes), 'Job body must be a bytes instance'
+        else:
+            assert isinstance(body, str), 'Job body must be a str instance'
+
         if isinstance(ttr, timedelta):
             ttr = total_seconds(ttr)
         if isinstance(delay, timedelta):
             delay = total_seconds(delay)
         ok_status = ['INSERTED']
         error_status = ['JOB_TOO_BIG', 'BURIED', 'DRAINING', 'EXPECTED_CRLF']
-        status, job = self.send_command("put", priority, delay, ttr, str(len(body.encode("utf8"))) + "\r\n" + body,
+        if raw:
+            body_len = bytes(str(len(body)), "utf8") + b"\r\n"
+        else:
+
+            body_len = str(len(body.encode("utf8"))) + "\r\n"
+
+        status, job = self.send_command("put", priority, delay, ttr, body_len + body,
                                         ok_status=ok_status,
                                         error_status=error_status)
 
@@ -276,45 +242,24 @@ class Connection(object):
         :type ttr: int | timedelta
         :return: job id
         :rtype: int
-
         """
-        assert isinstance(body, bytes), 'Job body must be a bytes instance'
-        if isinstance(ttr, timedelta):
-            ttr = total_seconds(ttr)
-        if isinstance(delay, timedelta):
-            delay = total_seconds(delay)
-        ok_status = ['INSERTED']
-        error_status = ['JOB_TOO_BIG', 'BURIED', 'DRAINING', 'EXPECTED_CRLF']
-
-        # status, job = self.send_command("put", priority, delay, ttr, str(len(body)) + "\r\n" + body,
-        #                                 ok_status=ok_status,
-        #                                 error_status=error_status)#original code
-        status, job = self.send_command_bytes(b'put', priority, delay, ttr, bytes(str(len(body)), 'utf8') + b'\r\n' + body,
-                                        ok_status=ok_status,
-                                        error_status=error_status)
-
-        return int(job)
+        return self.put(body, priority, delay, ttr, True)
 
     def parse_job(self, body):
-        job_id, body_rest = body.split(maxsplit=1)
-        job_body_size, job_body = body_rest.split(maxsplit=1)
-        job_body = str(job_body, "utf8")
-        job_body_size = job_body_size
-        return Job(self, int(job_id), job_body, int(job_body_size))
-
-    def parse_job_bytes(self, body):
         job_id, body_rest = body.split(maxsplit=1)
         job_body_size, job_body = body_rest.split(maxsplit=1)
         job_body = job_body
         job_body_size = job_body_size
         return Job(self, int(job_id), job_body, int(job_body_size))
 
-    def reserve(self, timeout=None):
+    def reserve(self, timeout=None, raw=False):
         """
         Reserve a job from one of the watched tubes, with optional timeout
         in seconds. Returns a Job object, or None if the request times out.
         See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#reserve-command for full info.
         :type timeout: int | timedelta
+        :param raw: If True then send body as bytes and not str
+        :type raw: bool
         :return: will return a newly-reserved job
         :rtype: Job
         """
@@ -334,35 +279,11 @@ class Connection(object):
         elif status == "DEADLINE_SOON":
             raise DeadlineSoon(body)
 
+        body = str(body, "utf8") if not raw else body
         return self.parse_job(body)
 
     def reserve_bytes(self, timeout=None):
-        """
-        Reserve a job from one of the watched tubes, with optional timeout
-        in seconds. Returns a Job object, or None if the request times out.
-        See https://github.com/kr/beanstalkd/blob/master/doc/protocol.md#reserve-command for full info.
-        :type timeout: int | timedelta
-        :return: will return a newly-reserved job
-        :rtype: Job
-        """
-        if isinstance(timeout, timedelta):
-            timeout = total_seconds(timeout)
-
-        if timeout is None:
-            command = "reserve"
-            args = []
-        else:
-            command = "reserve-with-timeout"
-            args = [timeout, ]
-        ok_status = ["RESERVED", "DEADLINE_SOON", "TIMED_OUT"]
-        status, body = self.send_command_bytes(bytes(command, 'utf8'), *args, ok_status=ok_status)
-
-        if status == "TIMED_OUT":
-            return None
-        elif status == "DEADLINE_SOON":
-            raise DeadlineSoon(body)
-
-        return self.parse_job_bytes(body)
+        return self.reserve(timeout, True)
 
     def kick(self, bound=1):
         """Kick at most bound jobs into the ready queue.
@@ -411,7 +332,7 @@ class Connection(object):
         if status == "NOT_FOUND":
             return None
 
-        return self.parse_job(body)
+        return self.parse_job(str(body, "utf8"))
 
     def _peek_state(self, state):
         """
@@ -425,7 +346,7 @@ class Connection(object):
         if status == "NOT_FOUND":
             return None
 
-        return self.parse_job(body)
+        return self.parse_job(str(body, "utf8"))
 
     def peek_ready(self):
         """Peek at next ready job. Returns a Job, or None.
@@ -655,9 +576,3 @@ class Connection(object):
         """
         _, body = self.send_command("stats-job", job_id, ok_status=["OK"], error_status=["NOT_FOUND"])
         return self._parse_yaml(body)
-
-
-
-
-
-

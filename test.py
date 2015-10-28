@@ -1,10 +1,10 @@
 from datetime import timedelta
-
-__author__ = 'Gabriel'
-
 from pystalkd import Beanstalkd
 import json
 import unittest
+
+__author__ = 'Gabriel'
+
 
 # Todo: don't skip tests if PyYaml is not installed
 
@@ -19,7 +19,10 @@ def clean_tube(tube_name, conn):
         if buried > 0:
             conn.kick(buried)
     while True:
-        job = conn.reserve(0)
+        # changed to reserve_bytes, because reserve will try to convert to a string
+        # causing a UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb9 in position 0: invalid start byte
+        # basically: you can reserve a string as bytes but the other way around might cause problems
+        job = conn.reserve_bytes(0)
         if job:
             job.delete()
         else:
@@ -128,7 +131,7 @@ class TestBeanstalkd(unittest.TestCase):
             with conn.temporary_watch(self.tube_name):
                 self.assertListEqual(conn.watching(), ["default", self.tube_name],
                                      "not watching {}".format(self.tube_name))
-            self.assertListEqual(conn.watching(), ["default"], "should only be watchin 'default'")
+            self.assertListEqual(conn.watching(), ["default"], "should only be watching 'default'")
         else:
             self.skipTest("needs PyYaml")
         conn.close()
@@ -150,7 +153,7 @@ class TestBeanstalkd(unittest.TestCase):
             self.skipTest("needs PyYaml")
             return
         t = timedelta(days=1)
-        #'ttr': 86400
+        # 'ttr': 86400
         conn.put("hey!", ttr=t)
         job = conn.reserve()
         ttr = job.stats()["ttr"]
@@ -172,8 +175,13 @@ class TestBeanstalkd(unittest.TestCase):
         """
         test put bytes and reserve bytes
         """
-        test_bytes = "台灣繁體字 Traditional Chinese characters".encode("utf8")
+
+        # test with random bytes
+        from os import urandom
+        test_bytes = urandom(50)
         job_id = self.conn.put_bytes(test_bytes)
+        self.assertIsInstance(job_id, int, "where's my job id?!")
+
         job = self.conn.reserve_bytes(0)
         self.assertEquals(job.body, test_bytes)
         job.delete()
@@ -193,7 +201,7 @@ class TestBeanstalkd(unittest.TestCase):
                 self.fail("{} failed ({}: {})".format(step, type(e), e))
 
     def tearDown(self):
-        #clean the queue
+        # clean the queue
         clean_tube(self.tube_name, self.conn)
         self.conn.close()
 

@@ -36,18 +36,35 @@ The main differences, API wise are:
 
 2) you can temporarily watch and use a tube using the `with` keyword
 
-  ```python
-  print(c.using()) # "default"
-  with c.temporary_use("test"):
-      print(c.using()) # "test"
-  print(c.using()) # "default"
-  
-  print(c.watching()) # ["default"]
-  with c.temporary_use("test"):
-      print(c.watching()) # ["default", "test"]
-  print(c.watching()) # ["default"]
-  ```
+```python
+print(c.using()) # "default"
+with c.temporary_use("test"):
+  print(c.using()) # "test"
+print(c.using()) # "default"
 
+print(c.watching()) # ["default"]
+with c.temporary_use("test"):
+  print(c.watching()) # ["default", "test"]
+print(c.watching()) # ["default"]
+```
+3) you also have access to the "bytes" API. 
+To maintain compatibility with beanstalkc the API worked only with strings but now
+you can use the functions ending in "_bytes" (internally this is controlled using the `raw` paramater) to work directly 
+with bytes
+
+```python
+from os import urandom
+test_bytes = urandom(50)
+job_id = c.put_bytes(test_bytes)
+job = c.reserve_bytes(0)
+print(job.body) # b'i\x91\xdf\xf8\x1b?zj....'
+
+job_id2 = c.put("string")
+job2 = c.reserve_bytes(0)
+print(job2.body) # b'string'
+```
+
+Note: you can use `reserve_bytes` with `put` and get the raw string (not encoded), but the other way around might cause problems
 
 
 Tests
