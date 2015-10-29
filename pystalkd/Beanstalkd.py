@@ -114,8 +114,9 @@ class Connection(object):
         :rtype: bytes
 
         """
-        buffer_size = 8192
+        buffer_size = 4096
         recvbuff = bytearray(buffer_size)
+        byte_list = []
         mem_view = memoryview(recvbuff)
 
         while True:
@@ -123,10 +124,11 @@ class Connection(object):
             n_bytes = SocketError.wrap(self._socket.recv_into, mem_view)
 
             mem_view = mem_view[0:n_bytes]
+            byte_list.append(mem_view.tobytes())
             if mem_view[-2:] == b'\r\n':
                 break
 
-        return mem_view.tobytes()
+        return b''.join(byte_list)
 
     def send(self, command, *args):
         """

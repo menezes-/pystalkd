@@ -13,7 +13,7 @@ if os.path.exists('README.md'):
 
 setup(
     name='pystalkd',
-    version='1.2.0',
+    version='1.2.1',
     packages=['pystalkd'],
     url='https://github.com/menezes-/pystalkd',
     download_url='https://github.com/menezes-/pystalkd/archive/1.2.zip',

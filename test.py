@@ -1,6 +1,9 @@
 from datetime import timedelta
 from pystalkd import Beanstalkd
+from os import urandom
 import json
+import random
+import string
 import unittest
 
 __author__ = 'Gabriel'
@@ -177,7 +180,6 @@ class TestBeanstalkd(unittest.TestCase):
         """
 
         # test with random bytes
-        from os import urandom
         test_bytes = urandom(50)
         job_id = self.conn.put_bytes(test_bytes)
         self.assertIsInstance(job_id, int, "where's my job id?!")
@@ -185,6 +187,39 @@ class TestBeanstalkd(unittest.TestCase):
         job = self.conn.reserve_bytes(0)
         self.assertEquals(job.body, test_bytes)
         job.delete()
+
+    def test_big(self):
+        """
+        Test a job with the max allowed size for job
+        """
+        if self.conn.parse_yaml:
+            max_size = self.conn.stats()['max-job-size']
+        else:
+            # use the default max size
+            max_size = 65535  # bytes
+
+        test_str = ''.join(random.choice(string.ascii_uppercase) for _ in range(max_size))
+        job_id = self.conn.put(test_str)
+        self.assertIsInstance(job_id, int, "where's my job id?!")
+        job = self.conn.reserve(0)
+        body = job.body
+        job.delete()
+        self.assertEqual(test_str, body)
+
+    def test_big_bytes(self):
+        if self.conn.parse_yaml:
+            max_size = self.conn.stats()['max-job-size']
+        else:
+            # use the default max size
+            max_size = 65535  # bytes
+
+        test_bytes = urandom(max_size)
+        job_id = self.conn.put_bytes(test_bytes)
+        self.assertIsInstance(job_id, int, "where's my job id?!")
+        job = self.conn.reserve_bytes(0)
+        body = job.body
+        job.delete()
+        self.assertEqual(test_bytes, body)
 
     # http://stackoverflow.com/a/5387956/482238
 
@@ -227,4 +262,6 @@ if __name__ == '__main__':
     suite.addTest(TestBeanstalkd("test_temporary_watch", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_chinese_word", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_bytes", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_big", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_big_bytes", host_arg, port_arg))
     unittest.TextTestRunner().run(suite)
