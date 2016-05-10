@@ -125,7 +125,8 @@ class Connection(object):
 
             mem_view = mem_view[0:n_bytes]
             byte_list.append(mem_view.tobytes())
-            if mem_view[-2:] == b'\r\n':
+            test_protocol_end = mem_view[-2:]
+            if test_protocol_end == b'\r\n' or len(test_protocol_end) < 2:
                 break
 
         return b''.join(byte_list)
