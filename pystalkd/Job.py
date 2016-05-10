@@ -3,7 +3,7 @@
 
 __license__ = '''
 Copyright (C) 2008-2014 Andreas Bolka
-Copyright (C) 2014 Gabriel Menezes
+Copyright (C) 2014-2016 Gabriel Menezes
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
