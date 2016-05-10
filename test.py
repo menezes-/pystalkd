@@ -221,6 +221,24 @@ class TestBeanstalkd(unittest.TestCase):
         job.delete()
         self.assertEqual(test_bytes, body)
 
+    def test_infinite_loop(self):
+        # get current job_id
+        hello_world = b'hello_world'
+        job_id = self.conn.put_bytes(hello_world)
+        job = self.conn.reserve_bytes(0)
+        job.delete()
+
+        # calculate size for infinite loop, so that
+        # \r and \n will be in different buffers
+        size = 4096 - len('RESERVED {} 4095\r\n'.format(job_id)) - len('\r')
+        test_bytes = urandom(size)
+        job_id = self.conn.put_bytes(test_bytes)
+        self.assertIsInstance(job_id, int, "where's my job id?!")
+        job = self.conn.reserve_bytes(0)
+        body = job.body
+        job.delete()
+        self.assertEqual(test_bytes, body)
+
     # http://stackoverflow.com/a/5387956/482238
 
     def steps(self):
@@ -264,4 +282,5 @@ if __name__ == '__main__':
     suite.addTest(TestBeanstalkd("test_bytes", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_big", host_arg, port_arg))
     suite.addTest(TestBeanstalkd("test_big_bytes", host_arg, port_arg))
+    suite.addTest(TestBeanstalkd("test_infinite_loop", host_arg, port_arg))
     unittest.TextTestRunner().run(suite)
