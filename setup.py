@@ -22,5 +22,6 @@ setup(
     author='Gabriel',
     author_email='gabrielmenezesvi@gmail.com',
     description='Beanstalkd bindings for python3',
-    long_description=long_description
+    long_description=long_description,
+    extras_require={'yaml': ["PyYAML"]}
 )
