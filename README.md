@@ -8,6 +8,7 @@ http://kr.github.io/beanstalkd/
 pystalkd is a beanstalkd bindings targeting python3.
 This library is based on https://github.com/earl/beanstalkc and should be API compatible.
 
+[![Build Status](https://travis-ci.org/menezes-/pystalkd.svg?branch=master)](https://travis-ci.org/menezes-/pystalkd)
 Installing
 -------
 ```
