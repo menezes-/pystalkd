@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 import os
 long_description = 'See https://github.com/menezes-/pystalkd'
 
@@ -13,10 +13,10 @@ if os.path.exists('README.md'):
 
 setup(
     name='pystalkd',
-    version='1.2.1',
+    version='1.2.2',
     packages=['pystalkd'],
     url='https://github.com/menezes-/pystalkd',
-    download_url='https://github.com/menezes-/pystalkd/archive/1.2.zip',
+    download_url='https://github.com/menezes-/pystalkd/archive/v1.2.2.zip',
     keywords=['beanstalkd', 'python3', 'bindings'],
     license='Apache-2.0',
     author='Gabriel',
