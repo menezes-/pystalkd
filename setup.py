@@ -20,7 +20,7 @@ setup(
     version='1.2.3',
     packages=['pystalkd'],
     url='https://github.com/menezes-/pystalkd',
-    download_url='https://github.com/menezes-/pystalkd/archive/v1.2.2.zip',
+    download_url='https://github.com/menezes-/pystalkd/archive/v1.2.3.zip',
     keywords=['beanstalkd', 'python3', 'bindings'],
     license='Apache-2.0',
     author='Gabriel',
