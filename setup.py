@@ -7,13 +7,17 @@ if os.path.exists('README.md'):
     # pandoc --from=markdown --to=rst --output=README.rst README.md
     import subprocess
 
-    process = subprocess.Popen(['pandoc', '--from=markdown', "--to=rst", "README.md"], stdout=subprocess.PIPE)
-    out, err = process.communicate()
-    long_description = str(out, 'utf8')
+    try:
+        process = subprocess.Popen(['pandoc', '--from=markdown', "--to=rst", "README.md"], stdout=subprocess.PIPE)
+        out, err = process.communicate()
+        long_description = str(out, 'utf8')
+    except FileNotFoundError:
+        # use default description
+        pass
 
 setup(
     name='pystalkd',
-    version='1.2.2',
+    version='1.2.3',
     packages=['pystalkd'],
     url='https://github.com/menezes-/pystalkd',
     download_url='https://github.com/menezes-/pystalkd/archive/v1.2.2.zip',
