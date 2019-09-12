@@ -250,7 +250,11 @@ class Connection(object):
 
     def parse_job(self, body):
         job_id, body_rest = body.split(maxsplit=1)
-        job_body_size, job_body = body_rest.split(maxsplit=1)
+        try:
+            job_body_size, job_body = body_rest.split(maxsplit=1)
+        except ValueError:
+            job_body_size = "0"
+            job_body = ""
         job_body = job_body
         job_body_size = job_body_size
         return Job(self, int(job_id), job_body, int(job_body_size))
