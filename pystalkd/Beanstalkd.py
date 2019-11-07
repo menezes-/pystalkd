@@ -388,7 +388,7 @@ class Connection(object):
 
         import yaml
 
-        return yaml.load(body)
+        return yaml.load(body, Loader=yaml.FullLoader)
 
     def tubes(self):
         """Return a list of all existing tubes.
