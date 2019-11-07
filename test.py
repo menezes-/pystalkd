@@ -171,7 +171,7 @@ class TestBeanstalkd(unittest.TestCase):
 
         job = self.conn.reserve(0)
 
-        self.assertEquals(job.body, "台灣繁體字 Traditional Chinese characters")
+        self.assertEqual(job.body, "台灣繁體字 Traditional Chinese characters")
         job.delete()
 
     def test_bytes(self):
@@ -185,7 +185,7 @@ class TestBeanstalkd(unittest.TestCase):
         self.assertIsInstance(job_id, int, "where's my job id?!")
 
         job = self.conn.reserve_bytes(0)
-        self.assertEquals(job.body, test_bytes)
+        self.assertEqual(job.body, test_bytes)
         job.delete()
 
     def test_big(self):
