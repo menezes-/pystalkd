@@ -85,7 +85,7 @@ License
 Copyright (C) 2008-2014 Andreas Bolka.
 
 Copyright (C) 2015-2016 Gabriel Menezes.
-Licensed under the [Apache License,Version 2.0][license].
+Licensed under the [MIT][license].
 
-[license]: http://www.apache.org/licenses/LICENSE-2.0
+[license]: https://opensource.org/licenses/MIT
 
