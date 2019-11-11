@@ -22,12 +22,12 @@ python setup.py install
 Using
 ------
 ```python
->>> from pystalkd.Beanstalkd import Connection
->>> c = Connection("localhost", 11300) #if no argument is given default configuration is used
->>> c.put("hey!")
->>> job = c.reserve(0)
->>> job.body
-"hey!"
+from pystalkd.Beanstalkd import Connection
+c = Connection("localhost", 11300) #if no argument is given default configuration is used
+c.put("hey!")
+job = c.reserve(0)
+print(job.body) # "hey!"
+
 ```
 One of the goals is to be API compatible with beanstalkc, so this tutorial should be valid: https://github.com/earl/beanstalkc/blob/master/TUTORIAL.mkd
 
@@ -38,6 +38,8 @@ The main differences, API wise are:
 2) you can temporarily watch and use a tube using the `with` keyword
 
 ```python
+from pystalkd.Beanstalkd import Connection
+c = Connection("localhost", 11300)
 print(c.using()) # "default"
 with c.temporary_use("test"):
   print(c.using()) # "test"
@@ -54,6 +56,8 @@ you can use the functions ending in "_bytes" (internally this is controlled usin
 with bytes
 
 ```python
+from pystalkd.Beanstalkd import Connection
+c = Connection("localhost", 11300)
 from os import urandom
 test_bytes = urandom(50)
 job_id = c.put_bytes(test_bytes)
