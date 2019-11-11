@@ -1,31 +1,24 @@
 from setuptools import setup
-import os
-long_description = 'See https://github.com/menezes-/pystalkd'
 
-# used to create the description to the pypi page
-if os.path.exists('README.md'):
-    # pandoc --from=markdown --to=rst --output=README.rst README.md
-    import subprocess
+# read the contents of your README file
+from os import path
 
-    try:
-        process = subprocess.Popen(['pandoc', '--from=markdown', "--to=rst", "README.md"], stdout=subprocess.PIPE)
-        out, err = process.communicate()
-        long_description = str(out, 'utf8')
-    except FileNotFoundError:
-        # use default description
-        pass
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='pystalkd',
-    version='1.2.3',
+    version='1.3.0',
     packages=['pystalkd'],
     url='https://github.com/menezes-/pystalkd',
-    download_url='https://github.com/menezes-/pystalkd/archive/v1.2.3.zip',
+    download_url='https://github.com/menezes-/pystalkd/archive/v1.3.0.zip',
     keywords=['beanstalkd', 'python3', 'bindings'],
-    license='Apache-2.0',
+    license='MIT',
     author='Gabriel',
     author_email='gabrielmenezesvi@gmail.com',
     description='Beanstalkd bindings for python3',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     extras_require={'yaml': ["PyYAML"]}
 )

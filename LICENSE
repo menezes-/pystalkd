@@ -1,12 +1,6 @@
-# -*- coding: utf8 -*-
-
-"""pystalkd - A beanstalkd Client Library for Python3 - Based on https://github.com/earl/beanstalkc"""
-
-__license__ = '''
-Copyright (C) 2008-2014 Andreas Bolka
-Copyright (c) 2019 Gabriel Menezes
-
 MIT License
+
+Copyright (c) 2019 Gabriel Menezes
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
-__version__ = '1.3.0'
-
-from . import Beanstalkd, Job
